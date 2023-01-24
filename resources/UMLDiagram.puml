@@ -1,0 +1,137 @@
+@startuml ASCIIPic
+skinparam groupinheritance 2
+skinparam classAttributeIconSize 0
+
+class ASCIIPic {
+    + run(argc : int, argv : char**) : int
+}
+
+abstract class ImageBuilder{
+    # image : vector<vector<RGBTRIPLE>>*
+    # inptr : FILE*
+    # height : int
+    # width : int
+    # filename : string
+    # {abstract} initialize() : void
+    + ImageBuilder(filename : string)
+    + getWidht() : int
+    + getHeight() : int
+    + getImage() : vector<vector<RGBTRIPLE>>*
+}
+
+class BMPBuilder{
+    - initialize() : void
+    + BMPBuilder(filename : string)
+}
+
+class JPEGBuilder{
+    - initialize() : void
+    + JPEGBuilder(filename : string)
+}
+
+class PNGBuilder{
+    - initialize() : void
+    + PNGBuilder(filename : string)
+}
+
+struct RGBTRIPLE{
+    - red : BYTE
+    - green : BYTE
+    - blue : BYTE
+}
+
+struct BITMAPFILEHEADER{
+    - bfType : WORD
+    - bfSize : DWORD
+    - bfReserved1 : WORD
+    - bfReserved2 : WORD
+    - bfOffBits : DWORD
+}
+
+struct BITMAPINFOHEADER{
+    - biSize : DWORD
+    - biWidth : LONG
+    - biHeight : LONG
+    - biPlanes : WORD
+    - biBitCount : WORD
+    - biCompression : DWORD
+    - biSizeImage : DWORD
+    - biXPelsPerMeter : LONG
+    - biYPelsPerMeter : LONG
+    - biClrUsed : DWORD
+    - biClrImportant : DWORD
+}
+
+abstract class StrategyTheme{
+    + {abstract} getTheme() : int
+}
+
+class StrategyLight{
+    + getTheme() : int
+}
+
+class StrategyDark{
+    + getTheme() : int
+}
+
+abstract class TemplatePrint{
+    # image : vector<vector<RGBTRIPLE>>*
+    # blockWidth : int
+    # width : int
+    # height : int
+    # getChunkAverage(blockY: int, blockX: int, blockGapY: float, blockGapX : float) : float
+    # printChar(brightness : int) : void
+    + TemplatePrint(filename : string, bool : lightTheme, blockWidth : int)
+    + {abstract} printImage() : void
+}
+
+class TemplatePrintDynImpl{
+    - setMinMax(min : *float, max : *float, brightness : float) : void
+    + printImage() : void
+}
+
+class TemplatePrintImpl{
+    + printImage() : void
+}
+
+package libjpeg{
+    struct jpeg_decompress_struct
+    struct jpeg_error_mgr
+}
+
+package libpng{
+    struct png_structp
+    struct png_infop
+}
+
+
+ImageBuilder <|-- BMPBuilder
+ImageBuilder <|-- JPEGBuilder
+ImageBuilder <|-- PNGBuilder
+
+ImageBuilder .> RGBTRIPLE : use
+
+ASCIIPic  o-- TemplatePrint : templatePrint
+
+StrategyTheme <|-- StrategyLight
+StrategyTheme <|-- StrategyDark
+
+TemplatePrint <|-- TemplatePrintDynImpl
+TemplatePrint <|-- TemplatePrintImpl
+
+TemplatePrint "1" o-- ImageBuilder : builder
+TemplatePrint "1" o- StrategyTheme : strategyTheme
+
+BMPBuilder o-- BITMAPFILEHEADER: bf
+BMPBuilder o-- BITMAPINFOHEADER: bi
+
+JPEGBuilder o-- jpeg_decompress_struct: cinfo
+JPEGBuilder o-- jpeg_error_mgr: jerr
+JPEGBuilder ..> libjpeg : use
+
+PNGBuilder o-- png_structp: png_ptr
+PNGBuilder o-- png_infop: info_ptr
+PNGBuilder ..> libpng : use
+
+
+@enduml
